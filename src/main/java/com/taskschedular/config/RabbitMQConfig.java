@@ -65,8 +65,7 @@ public class RabbitMQConfig {
 
     @Bean
     MessageListenerContainer messageListenerContainer() {
-        SimpleMessageListenerContainer simpleMessageListenerContainer = new SimpleMessageListenerContainer();
-        simpleMessageListenerContainer.setConnectionFactory(connectionFactory());
+        SimpleMessageListenerContainer simpleMessageListenerContainer = new SimpleMessageListenerContainer(connectionFactory());
         simpleMessageListenerContainer.setQueues(myQueue());
         simpleMessageListenerContainer.setMessageListener(new RabbitMQListener());
         simpleMessageListenerContainer.setConcurrentConsumers(CONSUMER_SIZE);

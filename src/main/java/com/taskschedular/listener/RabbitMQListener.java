@@ -28,6 +28,8 @@ public class RabbitMQListener implements MessageListener {
         try {
             Task task = (Task)(new ObjectInputStream(new ByteArrayInputStream(message.getBody())).readObject());
             LOGGER.info("Task Received from Queue and Ready for execution :"+ task);
+            Task taskResult = taskManager.finish(task);
+            LOGGER.info("Task has been finished : "+ taskResult);
         } catch (Exception e) {
             LOGGER.error("I/O Error caught:" + e.getMessage());
         }

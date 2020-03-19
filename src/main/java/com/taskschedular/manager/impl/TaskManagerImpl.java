@@ -5,7 +5,6 @@ import com.taskschedular.entity.Status;
 import com.taskschedular.entity.Task;
 import com.taskschedular.manager.TaskManager;
 import com.taskschedular.request.TaskRequest;
-import com.taskschedular.service.impl.TaskServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,9 +26,6 @@ public class TaskManagerImpl implements TaskManager {
 
     @Autowired
     private TaskDao taskDao;
-
-    @Value("${batch.size}")
-    private Integer BATCH_SIZE;
 
     @Value("${rabbitmq.exchange}")
     public String EXCHANGE;
@@ -69,17 +66,28 @@ public class TaskManagerImpl implements TaskManager {
     @Transactional
     public void process() {
         List<Task> result = new ArrayList();
-        List<Task> tasks = taskDao.get(BATCH_SIZE);
-        LOGGER.info("Fetched tasks from Storage : " + tasks.stream().map(task -> task.getId()).collect(Collectors.toList()));
-        for (Task task : tasks) {
-            if(task.getStatus().equals(Status.SUBMITTED)) {
-                task.setStatus(Status.IN_PROGRESS);
-                Task updatedTask = taskDao.save(task);
-                result.add(updatedTask);
+        List<Task> tasks = taskDao.get();
+        if(Objects.nonNull(tasks) && (tasks.size() > 0)) {
+            LOGGER.info("Fetched tasks from Storage : " + tasks.stream().map(task -> task.getId()).collect(Collectors.toList()));
+            for (Task task : tasks) {
+                if (task.getStatus().equals(Status.SUBMITTED)) {
+                    task.setStatus(Status.IN_PROGRESS);
+                    Task updatedTask = taskDao.save(task);
+                    result.add(updatedTask);
+                }
             }
+            LOGGER.info("Queueing tasks for processing : " + result.stream().map(task -> task.getId()).collect(Collectors.toList()));
+            tasks.forEach(task -> rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, task));
         }
-        LOGGER.info("Queueing tasks for processing : " + result.stream().map(task -> task.getId()).collect(Collectors.toList()));
-        tasks.forEach(task -> rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, task));
+    }
+
+    @Override
+    public Task finish(Task task) {
+        /*
+        Do the task
+         */
+        task.setStatus(Status.COMPLETED); // Mark the task as COMPLETED
+        return taskDao.save(task);
     }
 
 }

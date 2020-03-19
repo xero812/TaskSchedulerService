@@ -1,14 +1,15 @@
 package com.taskschedular.dao.impl;
 
+import com.taskschedular.config.CursorConfig;
 import com.taskschedular.dao.TaskDao;
 import com.taskschedular.entity.Status;
 import com.taskschedular.entity.Task;
-import com.taskschedular.util.Cursor;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,23 +22,16 @@ import java.util.UUID;
 @Repository
 public class TaskDaoImpl implements TaskDao {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskDaoImpl.class);
+
     @Autowired
     private EntityManager entityManager;
 
     @Autowired
-    private Cursor cursor;
+    private CursorConfig cursor;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
-    @Value("${redis.interval}")
-    private Integer REDIS_INTERVAL;
-
-    @Value("${thread.interval}")
-    private Integer THREAD_INTERVAL;
-
-    @Value("${spring.redis.key}")
-    private String key;
+    @Value("${batch.size}")
+    private Integer BATCH_SIZE;
 
     @Override
     public Task save(Task task) {
@@ -64,31 +58,23 @@ public class TaskDaoImpl implements TaskDao {
     }
 
     @Override
-    public List<Task> get(Integer batchSize) {
+    public List<Task> get() {
         Session session = entityManager.unwrap(Session.class);
-        Query query = session.createQuery("From Task t where timestamp between :fromDateTime and :toDateTime and status = :status ");
-        Date toDate = new Date();
-        Date fromDate = new Date();
-        fromDate.setTime(toDate.getTime() - THREAD_INTERVAL);
-        query.setParameter("fromDateTime", fromDate);
-        query.setParameter("toDateTime", toDate);
+        Query query = session.createQuery("From Task t where timestamp < :currenDateTime and status = :status ");
+        Date currentDate = new Date();
+        query.setParameter("currenDateTime", currentDate);
         query.setParameter("status", Status.SUBMITTED);
-        query.setMaxResults(batchSize);
-        int start = cursor.update(batchSize);
-        if(start % REDIS_INTERVAL == 0) {
-            updateCursor(start);
-        }
+        int start = cursor.getCursor();
+        LOGGER.info("Querying Tasks from Limit : (" + start + "," + BATCH_SIZE + ") Before " + currentDate);
         query.setFirstResult(start);
+        query.setMaxResults(BATCH_SIZE);
         List<Task> tasks = query.list();
-        return tasks;
-    }
-
-    private void updateCursor(Integer start) {
-        try {
-            redisTemplate.opsForValue().set(key, String.valueOf(start));
-        } catch (Exception e) {
-            redisTemplate.opsForValue().set(key, String.valueOf(0));
+        if(tasks.size() == 0) {
+            LOGGER.info("No Tasks found");
+            cursor.setToDefault();
         }
+        LOGGER.info("Query Result Size: " + tasks.size());
+        return tasks;
     }
 
 }

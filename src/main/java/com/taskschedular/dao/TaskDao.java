@@ -13,6 +13,6 @@ public interface TaskDao {
 
     Task get(UUID id);
 
-    List<Task> get(Integer batchSize);
+    List<Task> get();
 
 }
