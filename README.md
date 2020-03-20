@@ -1,18 +1,51 @@
-# Getting Started
+# TaskSchedulerService
 
-### Reference Documentation
-For further reference, please consider the following sections:
+An approach to designing a distributed task Scheduler service. We can schedule tasks with timestamps. The task can be anything like sending an email, text, hitting a third party API or as simplistic as printing a message on the terminal. 
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.2.5.RELEASE/maven-plugin/)
-* [Spring for RabbitMQ](https://docs.spring.io/spring-boot/docs/2.2.5.RELEASE/reference/htmlsingle/#boot-features-amqp)
-* [Spring Web](https://docs.spring.io/spring-boot/docs/2.2.5.RELEASE/reference/htmlsingle/#boot-features-developing-web-applications)
+The service works on plug n' play architecture and is written keeping in mind to be able to scale horizontally in case of large number of requests.
 
-### Guides
-The following guides illustrate how to use some features concretely:
+## Prerequisites
 
-* [Messaging with RabbitMQ](https://spring.io/guides/gs/messaging-rabbitmq/)
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/bookmarks/)
+### Redis 
+```$xslt
+$./redis-cli
+127.0.0.1:6379>
+```
+### MySQL 
+```$xslt
+ $./mysql -uroot -p123
+```
+### RabbitMQ
+```$xslt
+http://localhost:15672
+``` 
+
+## Starting the service
+
+```
+mvn spring-boot:run
+```
+
+## Scheduling Tasks
+
+```$xslt
+curl --location --request POST 'localhost:8080/tasks/submit' \
+--data-raw '{
+	"message":"drredecff",
+	"timestamp":"2020-03-10T00:42:30"
+}'
+```
+
+## Tools
+
+Spring Boot 2.2.5.RELEASE
+JDK 1.8
+Apache Maven 3.6.3
+Lombok 1.18.10
+Spring AMQP 2.2.5.RELEASE
+Hibernate 5.14.12
+Spring Data Redis 2.2.5.RELEASE
+
+
+
 
