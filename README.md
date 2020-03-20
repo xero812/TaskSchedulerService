@@ -39,11 +39,17 @@ curl --location --request POST 'localhost:8080/tasks/submit' \
 ## Tools
 
 Spring Boot 2.2.5.RELEASE
+
 JDK 1.8
+
 Apache Maven 3.6.3
+
 Lombok 1.18.10
+
 Spring AMQP 2.2.5.RELEASE
+
 Hibernate 5.14.12
+
 Spring Data Redis 2.2.5.RELEASE
 
 
