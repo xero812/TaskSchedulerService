@@ -3,6 +3,8 @@ package com.taskschedular.manager.impl;
 import com.taskschedular.dao.TaskDao;
 import com.taskschedular.entity.Status;
 import com.taskschedular.entity.Task;
+import com.taskschedular.exception.NotFoundException;
+import com.taskschedular.exception.ValidationException;
 import com.taskschedular.manager.TaskManager;
 import com.taskschedular.request.TaskRequest;
 import org.slf4j.Logger;
@@ -37,7 +39,10 @@ public class TaskManagerImpl implements TaskManager {
     private RabbitTemplate rabbitTemplate;
 
     @Override
-    public Task submit(TaskRequest taskRequest) {
+    public Task submit(TaskRequest taskRequest) throws ValidationException {
+        if(Objects.isNull(taskRequest) || Objects.isNull(taskRequest.getTimestamp())) {
+            throw new ValidationException();
+        }
         Task task = Task.builder()
                 .message(taskRequest.getMessage())
                 .timestamp(taskRequest.getTimestamp())
@@ -56,8 +61,11 @@ public class TaskManagerImpl implements TaskManager {
     }
 
     @Override
-    public Task get(String id) {
+    public Task get(String id) throws NotFoundException {
         Task task = taskDao.get(UUID.fromString(id));
+        if(Objects.isNull(task)) {
+            throw new NotFoundException();
+        }
         LOGGER.info("Task fetched successfully : ", task);
         return task;
     }

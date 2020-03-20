@@ -45,7 +45,7 @@ public class TaskServiceImpl implements TaskService {
                         .status(Status.FAILED)
                         .build())
                     .build();
-            LOGGER.error("Task could not be submitted : "+ taskResponse);
+            LOGGER.error("Task could not be submitted : "+ e.getMessage());
         }
         return taskResponse;
     }
@@ -69,7 +69,7 @@ public class TaskServiceImpl implements TaskService {
                             .status(Status.FAILED)
                             .build())
                     .build();
-            LOGGER.error("Tasks could not be fetched : "+ taskResponse);
+            LOGGER.error("Tasks could not be fetched : "+ e.getMessage());
         }
         return taskResponse;
     }
@@ -94,7 +94,7 @@ public class TaskServiceImpl implements TaskService {
                             .status(Status.FAILED)
                             .build())
                     .build();
-            LOGGER.error("Task could not be fetched : "+ taskResponse);
+            LOGGER.error("Task could not be fetched : "+ e.getMessage());
         }
         return taskResponse;
     }
