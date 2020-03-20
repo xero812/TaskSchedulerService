@@ -34,6 +34,13 @@ curl --location --request POST 'localhost:8080/tasks/submit' \
 	"message":"drredecff",
 	"timestamp":"2020-03-10T00:42:30"
 }'
+
+```
+## Tracking Progress
+
+```$xslt
+curl --location --request GET 'localhost:8080/tasks/{id}' \
+--header 'Content-Type: application/json'
 ```
 
 ## Tools
